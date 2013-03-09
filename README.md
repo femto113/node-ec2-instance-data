@@ -49,7 +49,7 @@ to other AWS services.  Note that this will only work on an instance started wit
 
 will produce output something like this
 
-```JSON
+```
     IAM provided security credentials for this instance: {
       "my-iam-role-name": {
         "Code": "Success",
