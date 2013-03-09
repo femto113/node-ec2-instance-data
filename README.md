@@ -6,10 +6,8 @@ Note: this only works on EC2 instances, behavior on other machines is undefined.
 
 ## Install
 
-```javascript
-    git clone https://github.com/femto113/node-ec2-instance-data.git
-    cd node-ec2-instance-data
-    npm link
+```bash
+    npm install ec2-instance-data
 ```
 
 ## Example
@@ -51,7 +49,7 @@ to other AWS services.  Note that this will only work on an instance started wit
 
 will produce output something like this
 
-```javascript
+```JSON
     {
       "my-iam-role-name": {
         "Code": "Success",
@@ -75,6 +73,3 @@ by @kilianc, which is worth considering as an alternative to this.
 
 MIT
 
-## TODO
-
-- publish to NPM
