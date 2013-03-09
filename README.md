@@ -51,7 +51,7 @@ will produce output something like this
 
 ```
     IAM provided security credentials for this instance: {
-      "my-iam-role-name": {
+      "myIamRoleName": {
         "Code": "Success",
         "LastUpdated": "2013-03-09T00:38:07Z",
         "Type": "AWS-HMAC",
