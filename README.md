@@ -68,7 +68,8 @@ will produce output something like this
 ## Acknowledgements
 
 This module inspired in part by several other efforts in the same realm,
-including [https://github.com/kilianc/node-ec2metadata].
+including [ec2metadata](https://github.com/kilianc/node-ec2metadata) by @kilianc,
+which is worth considering as an alternative to this.
 
 ## TODO
 
