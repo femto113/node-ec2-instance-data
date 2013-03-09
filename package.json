@@ -1,0 +1,15 @@
+{
+  "author": "Ken Woodruff <ken.woodruff@gmail.com>",
+  "name": "ec2-instance-data",
+  "description": "recursively retrieve ec2 instance data via http.get",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/femto113/node-ec2-instance-data.git"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}
