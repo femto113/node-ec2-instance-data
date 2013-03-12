@@ -49,9 +49,9 @@ to other AWS services.  Note that this will only work on an instance started wit
 
 will produce output something like this
 
-```JSON
-    {
-      "my-iam-role-name": {
+```
+    IAM provided security credentials for this instance: {
+      "myIamRoleName": {
         "Code": "Success",
         "LastUpdated": "2013-03-09T00:38:07Z",
         "Type": "AWS-HMAC",
@@ -66,7 +66,8 @@ will produce output something like this
 ## Acknowledgements
 
 This module inspired in part by several other efforts in the same realm,
-including [/jolira/ec2-user-data] and [ec2metadata](/kilianc/node-ec2metadata)
+including [ec2-user-data](https://github.com/jolira/ec2-user-data)
+and [ec2metadata](https://github.com/kilianc/node-ec2metadata)
 by @kilianc, which is worth considering as an alternative to this.
 
 ## License
