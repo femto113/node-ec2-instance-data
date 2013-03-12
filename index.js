@@ -5,24 +5,28 @@
 var http = require('http');
 var EventEmitter = require('events').EventEmitter;
 
-var HOST = '169.254.169.254';
+var self = exports = module.exports = new EventEmitter();
 
-module.exports = new EventEmitter();
-
+// probably don't want to override this, unless you're doing something cute outside of ec2
+self.host = '169.254.169.254';
+// these should generally not take longer than a few ms apiece, so the default timeout is pretty aggressive
+self.timeout = 100;
 // set to true to convert path-name to pathName (allows for . navigation of nested data)
-module.exports.camelize = false;
+self.camelize = false;
+// set to true to convert date strings to Date objects
+self.parseDates = false;
 // set with wherever you want to start.  Note that you cannot start successfully at /latest/ or
 // above because AWS doesn't return proper path names at the top level (they're missing the trailing /) 
-module.exports.roots = ['/latest/meta-data/', '/latest/dynamic/'];
+self.roots = ['/latest/meta-data/', '/latest/dynamic/'];
 
 var paths = null, cache = null;
 
 var requests = 0; // number of in-flight requests
 
-module.exports.on('next', function () {
+self.on('next', function () {
     var path = paths.shift();
-    var request = http.get({ host: HOST, path: path }, function (response) {
-    requests++;
+    var request = http.get({ host: self.host, path: path }, function (response) {
+        requests++;
         if (response.statusCode != 200) { // sometimes it pukes...
             cache[path] = "http error " + response.statusCode;
         } else if (/\/$/.test(path)) { // this is a directory, expect a newline delimited list of children
@@ -37,17 +41,21 @@ module.exports.on('next', function () {
                 cache[path] = chunk;
             });
         }
-        response.once('end', function () { requests--; module.exports.emit('end'); });
+        response.once('end', function () { requests--; self.emit('end'); });
     }).on("error", function (error) {
-        console.log("error retrieving %s: %s", path, JSON.stringify(error));
+        paths.length = 0; // clear out any remaining paths
+        self.emit('error', error);
+    }).setTimeout(self.timeout, function () {
+        paths.length = 0; // clear out any remaining paths
+        self.emit('error', "request for " + path + " timed out");
     });
 });
 
-module.exports.on('end', function () {
+self.on('end', function () {
     if (paths.length > 0) {
-         module.exports.emit('next');
+         self.emit('next');
     } else if (requests == 0) {
-     module.exports.emit('finalize');
+     self.emit('finalize');
 }
  });
 
@@ -56,32 +64,109 @@ function deep_set(root, path, value) {
     var twig = root;
     path.split('/').forEach(function (branch, index, branches) {
         if (branch) {
-            if (module.exports.camelize) {
-         branch = branch.replace(/(\-([a-z]))/g, function (m) { return m[1].toUpperCase(); })
-        }
-        if (index < branches.length - 1) {
-         twig = twig[branch] || (twig[branch] = {});
-        } else {
+            if (self.camelize) {
+                branch = branch.replace(/(\-([a-z]))/g, function (m) { return m[1].toUpperCase(); })
+            }
+            if (index < branches.length - 1) {
+                twig = twig[branch] || (twig[branch] = {});
+            } else {
                 // optimistically try treating the value as JSON
                 try {
-           twig[branch] = JSON.parse(value);
-        } catch (e) {
-            twig[branch] = value;
+                    twig[branch] = JSON.parse(value);
+                } catch (e) {
+                    twig[branch] = value;
+                }
+            }
         }
-        }
-    }
     });
 }
 
-module.exports.on('finalize', function () {
-    for (path in cache) deep_set(module.exports, path, cache[path]);
-    module.exports.emit('ready');
+// sort of inverse of above, get a nested object value from a path
+function deep_get(root, path) {
+    var twig = root, result = undefined;
+    path.split('/').forEach(function (branch, index, branches) {
+        if (branch) {
+            if (self.camelize) {
+                branch = branch.replace(/(\-([a-z]))/g, function (m) { return m[1].toUpperCase(); })
+            }
+            if (index < branches.length - 1) {
+                twig = twig[branch];
+            } else {
+                result = twig && twig[branch];
+            }
+        }
+    });
+    return result;
+}
+
+// helper to recursively parse all date strings into Date objects
+function parse_date_strings(root) {
+    for (key in root) {
+        if (!root.hasOwnProperty(key)) continue;
+        var value = root[key];
+        if (typeof(value) === 'object') { 
+            parse_date_strings(value);
+        } else if (typeof(value) === 'string' && /\d{4}-?\d{2}-?\d{2}(T?\d{2}:?\d{2}:?\d{2}(Z)?)?/.test(value)) {
+            var timestamp = Date.parse(value);
+            if (!isNaN(timestamp)) {
+                root[key] = new Date(timestamp);
+            }
+        }
+    }
+}
+
+self.on('finalize', function () {
+    for (path in cache) deep_set(self, path, cache[path]);
+    // post process the data to convert any date strings into real dates
+    // note that this happens after the deep_set because we may find them within
+    // nested JSON documents
+    if (self.parseDates) parse_date_strings(self);
+    cache = paths = null;
+    self.emit('ready', self);
 });
 
-module.exports.init = function (ready_callback) {
-    if (ready_callback) module.exports.once('ready', ready_callback);
-    module.exports.init = function () {}; // should only ever need to be called once
+self.init = function (callback) {
+    if (callback) {
+	// if a callback is passed to init assume it takes error as first parameter
+	self.once('error', callback);
+	// but the ready callback just gets data, so bind error to null for that
+	self.once('ready', callback.bind(null, null));
+    }
+    self.init = function () {}; // should only ever need to be called once
     cache = {};
-    paths = module.exports.roots;
-    for (i = 0; i < paths.length; i++) module.exports.emit('next');
+    paths = self.roots;
+    for (i = 0; i < paths.length; i++) self.emit('next');
+};
+
+// below are some convenient aliases for getting useful bits of data that are otherwise quite buried
+
+self.instanceId = function () {
+    return deep_get(self, "/latest/dynamic/instance-identity/document/instanceId");
+};
+
+self.region = function () {
+    return deep_get(self, "/latest/dynamic/instance-identity/document/region");
+};
+
+self.availabilityZone = function () {
+    return deep_get(self, "/latest/meta-data/placement/availability-zone");
+};
+
+// Role names show up as folders under security-credentials. Currently only one role can be assigned,
+// so we simply always return the first.
+self.iamRole = function () {
+    return Object.keys(deep_get(self, "/latest/meta-data/iam/security-credentials"))[0];
+};
+
+// get the iam provided security credentials
+// NOTE: maps meta-data names to the frustratingly similar ones expected by aws-sdk
+self.iamSecurityCredentials = function () {
+    var role = self.iamRole();
+    if (!role) return undefined;
+    var securityCredentials = deep_get(self, "/latest/meta-data/iam/security-credentials")[role];
+    return {
+	accessKeyId: securityCredentials.AccessKeyId,
+        secretAccessKey: securityCredentials.SecretAccessKey,
+        sessionToken: securityCredentials.Token
+    }
 };
