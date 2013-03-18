@@ -69,7 +69,7 @@ There is another store of meta-data for EC2 instances, [tags](http://docs.aws.am
 By default all instances created via the console have a `Name` tag, but you can add others.  The tags for the current instance
 can be accessed via the `initTags` method, which must be called after `init`.  This uses EC2's
 [DescribeTags](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeTags.html) API via
-the [AWS SDK for Node.js(http://aws.amazon.com/sdkfornodejs/).  Because this is an optional dependency you must explicitly install it with
+the [AWS SDK for Node.js](http://aws.amazon.com/sdkfornodejs/).  Because this is an optional dependency you must explicitly install it with
 `npm install aws-sdk`.  To access the tags the client must be initialized with credentials for an account with 
 permission to use the DescribeTags API, by far the simplest way to do this is to assign an IAM role to the instance, 
 in which case it will "just work", e.g.

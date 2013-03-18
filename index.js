@@ -187,7 +187,8 @@ self.initTags = function (callback) {
   if (typeof(AWS.config.credentials.accessKeyId) === "undefined") {
     AWS.config.update({ credentials: self.iamSecurityCredentials() });
   }
-  AWS.EC2.client.describeTags({ Filters: [{ Name: "resource-id", Values: [self.instanceId()]}] }, function (err, data) {
+  var ec2 = new AWS.EC2.Client();
+  ec2.describeTags({ Filters: [{ Name: "resource-id", Values: [self.instanceId()]}] }, function (err, data) {
         if (err) {
             callback(err);
         } else {
