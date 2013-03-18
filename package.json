@@ -3,13 +3,15 @@
   "name": "ec2-instance-data",
   "description": "recursively retrieve ec2 instance data via http.get",
   "keywords": ["ec2", "aws", "meta-data", "iam"],
-  "version": "0.2.0",
+  "version": "0.3.0",
   "repository": {
     "url": "https://github.com/femto113/node-ec2-instance-data.git"
   },
   "dependencies": {},
   "devDependencies": {},
-  "optionalDependencies": {},
+  "optionalDependencies": {
+    "aws-sdk": "*"
+  },
   "license": "MIT",
   "engines": {
     "node": "*"

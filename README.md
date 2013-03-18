@@ -63,6 +63,43 @@ will produce output something like this
     }
 ```
 
+### EC2 Tags
+
+There is another store of meta-data for EC2 instances, [tags](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html).
+By default all instances created via the console have a `Name` tag, but you can add others.  The tags for the current instance
+can be accessed via the `initTags` method, which must be called after `init`.  This uses EC2's
+[DescribeTags](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeTags.html) API via
+the [AWS SDK for Node.js(http://aws.amazon.com/sdkfornodejs/).  Because this is an optional dependency you must explicitly install it with
+`npm install aws-sdk`.  To access the tags the client must be initialized with credentials for an account with 
+permission to use the DescribeTags API, by far the simplest way to do this is to assign an IAM role to the instance, 
+in which case it will "just work", e.g.
+
+```javascript
+var instance = require("./index.js");
+
+instance.init(function (error, data) {
+  if (error) {
+    console.log(error);
+    process.exit();
+  } else {
+    instance.initTags(console.log);
+  }
+});
+```
+```javascript
+{
+    "Name": "MyInstanceName",
+    "OtherTag": "SomethingElse"
+}
+```
+
+If no IAM Role is available you can set the credentials explicitly before calling `initTags`, [see
+aws-sdk docs for details](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html).
+
+## Change Log
+
+- 0.3.0: added built-in support for querying EC2 tags (initTags method)
+
 ## Acknowledgements
 
 This module inspired in part by several other efforts in the same realm,
@@ -73,4 +110,3 @@ by @kilianc, which is worth considering as an alternative to this.
 ## License
 
 MIT
-

@@ -170,3 +170,31 @@ self.iamSecurityCredentials = function () {
         sessionToken: securityCredentials.Token
     }
 };
+
+// fetch tags for the current instance
+// NOTE: requires aws-sdk be installed, and either an IAM role with DescribeTags permissions or
+// the credentials for AWS already set to an account that does.
+self.initTags = function (callback) {
+  var AWS = null;
+  try {
+    AWS = require("aws-sdk");
+  } catch (e) {
+    return callback('unable to require aws-sdk, you may need to install it');
+  }
+  
+  AWS.config.update({ region: self.region() });
+  // TODO: any better way of seeing if credentials have already been set?
+  if (typeof(AWS.config.credentials.accessKeyId) === "undefined") {
+    AWS.config.update({ credentials: self.iamSecurityCredentials() });
+  }
+  AWS.EC2.client.describeTags({ Filters: [{ Name: "resource-id", Values: [self.instanceId()]}] }, function (err, data) {
+        if (err) {
+            callback(err);
+        } else {
+            self.tags = {};
+            data.Tags.forEach(function (tag) { self.tags[tag.Key] = tag.Value; });
+            callback(null, self.tags);
+        }
+  });
+};
+
