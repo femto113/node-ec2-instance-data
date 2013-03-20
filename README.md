@@ -2,7 +2,9 @@
 
 Recursively retrieve EC2 instance data via http.get.
 
-Note: this only works on EC2 instances, behavior on other machines is undefined.
+Note: this assumes that a metadata service is available at http://169.254.169.254/.
+Thus it works on EC2 instances, behavior on other machines is undefined.  See
+the test/ folder for a fake service you can use for testing elsewhere.
 
 ## Install
 
@@ -98,6 +100,7 @@ aws-sdk docs for details](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS
 
 ## Change Log
 
+- 0.3.1: added fake metadata server for testing outside EC2
 - 0.3.0: added built-in support for querying EC2 tags (initTags method)
 
 ## Acknowledgements
