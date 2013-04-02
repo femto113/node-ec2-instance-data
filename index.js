@@ -55,6 +55,7 @@ self.on('next', function () {
         } else { // this is an end node, expect a string
             response.on('data', function (chunk) {
                 if (chunk instanceof Buffer) chunk = chunk.toString('utf8');
+                if (!(path in cache)) cache[path] = '';
                 cache[path] += chunk;
             });
         }
