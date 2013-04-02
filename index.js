@@ -23,6 +23,21 @@ var paths = null, cache = null;
 
 var requests = 0; // number of in-flight requests
 
+// certain paths require special handling
+var special = {
+  '/latest/meta-data/public-keys/' : function (chunk) {
+      if (chunk instanceof Buffer) chunk = chunk.toString('utf8');
+      children = chunk.split('\n');
+      children.forEach(function (child) {
+        if (child) {
+          var a = child.split('='); // index=keyname, e.g. 0=admin@example.com
+          paths.push(path + a[0] + '/')
+          cache[path + a[0] + '/' + 'name'] = a[1];
+        }
+      });
+  }
+};
+
 self.on('next', function () {
     var path = paths.shift();
     var request = http.get({ host: self.host, path: path }, function (response) {
@@ -30,15 +45,15 @@ self.on('next', function () {
         if (response.statusCode != 200) { // sometimes it pukes...
             cache[path] = "http error " + response.statusCode;
         } else if (/\/$/.test(path)) { // this is a directory, expect a newline delimited list of children
-            response.once('data', function (chunk) {
+            response.once('data', (path in special) ? special[path] : function (chunk) {
                 if (chunk instanceof Buffer) chunk = chunk.toString('utf8');
                 children = chunk.split('\n');
                 children.forEach(function (child) { if (child) paths.push(path + child) });
             });
         } else { // this is an end node, expect a string
-            response.once('data', function (chunk) {
+            response.on('data', function (chunk) {
                 if (chunk instanceof Buffer) chunk = chunk.toString('utf8');
-                cache[path] = chunk;
+                cache[path] += chunk;
             });
         }
         response.once('end', function () { requests--; self.emit('end'); });
@@ -46,18 +61,18 @@ self.on('next', function () {
         paths.length = 0; // clear out any remaining paths
         self.emit('error', error);
     }).setTimeout(self.timeout, function () {
-        paths.length = 0; // clear out any remaining paths
-        self.emit('error', "request for " + path + " timed out");
+        cache[path] = "request timed out";
+        requests--; self.emit('end');
     });
 });
 
 self.on('end', function () {
     if (paths.length > 0) {
-         self.emit('next');
-    } else if (requests == 0) {
-     self.emit('finalize');
-}
- });
+        self.emit('next');
+    } else if (requests <= 0) {
+        self.emit('finalize');
+    }
+});
 
 // helper to turn a set of paths into nested objects
 function deep_set(root, path, value) {
