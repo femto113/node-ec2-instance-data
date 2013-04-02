@@ -26,12 +26,14 @@ var requests = 0; // number of in-flight requests
 // certain paths require special handling
 var special = {
   '/latest/meta-data/public-keys/' : function (chunk) {
+      var path = '/latest/meta-data/public-keys/';
       if (chunk instanceof Buffer) chunk = chunk.toString('utf8');
       children = chunk.split('\n');
       children.forEach(function (child) {
         if (child) {
           var a = child.split('='); // index=keyname, e.g. 0=admin@example.com
           paths.push(path + a[0] + '/')
+          // stick the name in there just to be friendly
           cache[path + a[0] + '/' + 'name'] = a[1];
         }
       });
