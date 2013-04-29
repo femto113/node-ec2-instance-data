@@ -33,38 +33,6 @@ from a couple common roots: `/latest/meta-data/` and `/latest/dynamic/` (the roo
 if desired).  While it does generate a lot of http requests, it still only takes about 50 milliseconds
 to spider the default data set, which should be tolerable when starting a service.
 
-Here's an example that pulls only the IAM provided identity information, which you can then use to connect
-to other AWS services.  Note that this will only work on an instance started with an IAM role.
-
-```javascript
-    var instance = require("ec2-instance-data");
-
-    instance.camelize = true; // replaces "path-name" with "pathName", allowing use of .
-    instance.roots = ['/latest/meta-data/iam/']; // just pull the IAM data
-
-    instance.init(function () {
-        console.log("IAM provided security credentials for this instance: %s",
-              JSON.stringify(instance.latest.metaData.iam.securityCredentials, null, "  ")
-        );
-    });
-```
-
-will produce output something like this
-
-```
-    IAM provided security credentials for this instance: {
-      "myIamRoleName": {
-        "Code": "Success",
-        "LastUpdated": "2013-03-09T00:38:07Z",
-        "Type": "AWS-HMAC",
-        "AccessKeyId": "ASIXXXXXXXXXXXXXXX2Q",
-        "SecretAccessKey": "SQXXXX.....xxxrp",
-        "Token": "AQoDYXXXXX...XXXXXGWC4=",
-        "Expiration": "2013-03-09T07:00:14Z"
-      }
-    }
-```
-
 ### EC2 Tags
 
 There is another store of meta-data for EC2 instances, [tags](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html).
@@ -100,6 +68,7 @@ aws-sdk docs for details](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS
 
 ## Change Log
 
+- 0.3.5: updated optional aws-sdk dependency to > 0.9.7, removed moot IAM credential logic
 - 0.3.1: added fake metadata server for testing outside EC2
 - 0.3.0: added built-in support for querying EC2 tags (initTags method)
 

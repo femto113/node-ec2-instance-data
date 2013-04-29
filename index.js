@@ -201,10 +201,6 @@ self.initTags = function (callback) {
   }
   
   AWS.config.update({ region: self.region() });
-  // TODO: any better way of seeing if credentials have already been set?
-  if (typeof(AWS.config.credentials.accessKeyId) === "undefined") {
-    AWS.config.update({ credentials: self.iamSecurityCredentials() });
-  }
   var ec2 = new AWS.EC2.Client();
   ec2.describeTags({ Filters: [{ Name: "resource-id", Values: [self.instanceId()]}] }, function (err, data) {
         if (err) {
