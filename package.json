@@ -5,7 +5,7 @@
   "keywords": ["ec2", "aws", "meta-data", "iam"],
   "version": "0.3.5",
   "repository": {
-    "url": "https://github.com/femto113/node-ec2-instance-data.git"
+    "url": "https://github.com/snupi/node-ec2-instance-data.git"
   },
   "dependencies": {},
   "devDependencies": {},
