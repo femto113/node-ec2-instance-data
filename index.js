@@ -201,7 +201,7 @@ self.initTags = function (callback) {
   }
   
   AWS.config.update({ region: self.region() });
-  var ec2 = new AWS.EC2.Client();
+  var ec2 = new AWS.EC2();
   ec2.describeTags({ Filters: [{ Name: "resource-id", Values: [self.instanceId()]}] }, function (err, data) {
         if (err) {
             callback(err);
