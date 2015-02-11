@@ -68,6 +68,7 @@ aws-sdk docs for details](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS
 
 ## Change Log
 
+- 0.4.0: updated optional aws-sdk dependency to ~ 2.1.9, fixed API call per @simonlast
 - 0.3.5: updated optional aws-sdk dependency to > 0.9.7, removed moot IAM credential logic
 - 0.3.1: added fake metadata server for testing outside EC2
 - 0.3.0: added built-in support for querying EC2 tags (initTags method)
