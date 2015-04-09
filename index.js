@@ -61,7 +61,7 @@ self.on('next', function () {
         }
         response.once('end', function () { requests--; self.emit('end'); });
     }).on("error", function (error) {
-        paths.length = 0; // clear out any remaining paths
+        if (paths && paths.length) paths.length = 0; // clear out any remaining paths
         self.emit('error', error);
     }).setTimeout(self.timeout, function () {
         cache[path] = "request timed out";
