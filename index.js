@@ -16,8 +16,8 @@ self.camelize = false;
 // set to true to convert date strings to Date objects
 self.parseDates = false;
 // set with wherever you want to start.  Note that you cannot start successfully at /latest/ or
-// above because AWS doesn't return proper path names at the top level (they're missing the trailing /) 
-self.roots = ['/latest/meta-data/', '/latest/dynamic/'];
+// above because AWS doesn't return proper path names at the top level (they're missing the trailing /)
+var ROOTS = ['/latest/meta-data/', '/latest/dynamic/'];
 
 var paths = null, cache = null;
 
@@ -122,7 +122,7 @@ function parse_date_strings(root) {
     for (key in root) {
         if (!root.hasOwnProperty(key)) continue;
         var value = root[key];
-        if (typeof(value) === 'object') { 
+        if (typeof(value) === 'object') {
             parse_date_strings(value);
         } else if (typeof(value) === 'string' && /\d{4}-?\d{2}-?\d{2}(T?\d{2}:?\d{2}:?\d{2}(Z)?)?/.test(value)) {
             var timestamp = Date.parse(value);
@@ -144,17 +144,23 @@ self.on('finalize', function () {
 });
 
 self.init = function (callback) {
-    if (callback) {
-	// if a callback is passed to init assume it takes error as first parameter
-	self.once('error', callback);
-	// but the ready callback just gets data, so bind error to null for that
-	self.once('ready', callback.bind(null, null));
-    }
-    self.init = function () {}; // should only ever need to be called once
-    cache = {};
-    paths = self.roots;
-    for (i = 0; i < paths.length; i++) self.emit('next');
+    self.reload(callback);
+    self.init = function() {};
 };
+
+self.reload = function(callback) {
+  if (callback) {
+    // if a callback is passed to init assume it takes error as first parameter
+    self.once('error', callback);
+    self.once('ready', function(data) {
+        callback(undefined,data);
+    })
+  }
+  self.roots = [].concat(ROOTS)
+  cache = {};
+  paths = self.roots;
+  for (i = 0; i < paths.length; i++) self.emit('next');
+}
 
 // below are some convenient aliases for getting useful bits of data that are otherwise quite buried
 
@@ -199,7 +205,7 @@ self.initTags = function (callback) {
   } catch (e) {
     return callback('unable to require aws-sdk, you may need to install it');
   }
-  
+
   AWS.config.update({ region: self.region() });
   var ec2 = new AWS.EC2();
   ec2.describeTags({ Filters: [{ Name: "resource-id", Values: [self.instanceId()]}] }, function (err, data) {
@@ -212,4 +218,3 @@ self.initTags = function (callback) {
         }
   });
 };
-
